@@ -6,7 +6,8 @@ setup:
 	pip install -r requirements.txt
 
 data:
-	python src/download_data.py --season 2023
+        # Download last 15 Premier League seasons
+        python src/download_data.py --start 2010 --end 2024
 
 prepare:
-	python src/prepare_data.py
+        python src/prepare_data.py
