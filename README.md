@@ -25,8 +25,9 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # 3) (Option A) Manually download CSV(s) to data/raw/
-# 3) (Option B) Try the helper script (works if the URL pattern hasn't changed):
-python src/download_data.py --season 2023
+# 3) (Option B) Use the helper script to pull multiple seasons:
+python src/download_data.py                 # downloads last ~10 seasons
+# python src/download_data.py --start 2010 --end 2024  # custom range example
 
 # 4) Prepare/clean data → data/processed/matches.parquet
 python src/prepare_data.py

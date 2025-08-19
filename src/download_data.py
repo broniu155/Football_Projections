@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import pathlib
 import sys
 from urllib.request import urlretrieve
@@ -9,12 +10,15 @@ from urllib.request import urlretrieve
 
 BASE = "https://www.football-data.co.uk/mmz4281"
 
-def season_code(year: int):
-    # Convert calendar start year to YYYYYY code used by mmz4281 (e.g., 2324 for 2023-24)
-    y2 = (year + 1) % 100
-    return f"{str(year%100).zfill(2)}{str(y2).zfill(2)}"
 
-def main(season_start: int):
+def season_code(year: int) -> str:
+    """Convert start year to the mmz4281 code (e.g., 2324 for 2023-24)."""
+    y2 = (year + 1) % 100
+    return f"{str(year % 100).zfill(2)}{str(y2).zfill(2)}"
+
+
+def download_season(season_start: int) -> None:
+    """Download a single season CSV into data/raw."""
     code = season_code(season_start)
     # E0 = Premier League. For other leagues see the site.
     path = f"{BASE}/{code}/E0.csv"
@@ -25,12 +29,47 @@ def main(season_start: int):
         urlretrieve(path, out.as_posix())
         print("Done.")
     except Exception as e:
-        print("Download failed. Try manual download from football-data.co.uk.", file=sys.stderr)
+        print(
+            "Download failed. Try manual download from football-data.co.uk.",
+            file=sys.stderr,
+        )
         print(e, file=sys.stderr)
         sys.exit(1)
 
+
+def main(start: int, end: int) -> None:
+    """Download a range of seasons (inclusive)."""
+    if end < start:
+        raise SystemExit("--end must be >= --start")
+    for season_start in range(start, end + 1):
+        download_season(season_start)
+
+
 if __name__ == "__main__":
+    today = datetime.date.today()
+    latest_start = today.year - 1  # last completed season start
+    default_start = latest_start - 9  # roughly last 10 seasons
     ap = argparse.ArgumentParser()
-    ap.add_argument("--season", type=int, default=2023, help="Season start year, e.g., 2023 for 2023-24")
+    ap.add_argument(
+        "--start",
+        type=int,
+        default=default_start,
+        help="First season start year, e.g., 2014 for 2014-15.",
+    )
+    ap.add_argument(
+        "--end",
+        type=int,
+        default=latest_start,
+        help="Last season start year (inclusive).",
+    )
+    ap.add_argument(
+        "--season",
+        type=int,
+        help="Download a single season (deprecated, equivalent to --start YEAR --end YEAR)",
+    )
     args = ap.parse_args()
-    main(args.season)
+    if args.season is not None:
+        main(args.season, args.season)
+    else:
+        main(args.start, args.end)
+
